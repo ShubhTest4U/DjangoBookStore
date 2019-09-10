@@ -57,22 +57,19 @@
       {% endfor %}
     </ul>
 
-
     <div class="container carousel-inner no-padding">
-
       <div class="carousel-item active">
-
-
 
         {% for i in book %}
         <div class="col-xs-3 col-sm-3 col-md-3">
           <div class="card align-items-center" style="width: 18rem;">
             <img src='/media/{{i.image}}' class="card-img-top" alt="...">
             <div class="card-body">
-              <h5 class="card-title">{{i.book_name}}</h5>
+              <h5 class="card-title" id="namebk{{i.id}}">{{i.book_name}}</h5>
               <p class="card-text">{{i.desc|slice:"0:53"}}...</p>
-
+              <span id="divbk{{i.id}}" class="divbk">
 			  <button id="bk{{i.id}}" class="btn btn-primary cart">Add To Cart</button>
+              </span>
 			  <a href="/book/books/{{i.id}}"> <button id="qv{{i.id}}" class="btn btn-primary cart">Quick View</button></a>
             </div>
           </div>
@@ -83,9 +80,6 @@
 
         {% endfor %}
     </div>
-
-
-
 </div>
 </div>
     <!-- left and right controls for the slide -->
@@ -102,17 +96,20 @@
 
 {% block js %}
 <script>
-console.log('working');
+
+//Find out cart items from localstorage
+
 if(localStorage.getItem('cart') == null){
 var cart = {};
 }
 else
 {
 cart = JSON.parse(localStorage.getItem('cart'));
-document.getElementById('cart').innerHTML = Object.keys(cart).length;
+updateCart(cart);
 }
+
+//if add 2 cart button is cicked add/increment item 
 $('.cart').click(function(){
-console.log('clicked');
 var idstr = this.id.toString();
 console.log(idstr);
 if (cart[idstr] !=undefined){
@@ -122,13 +119,54 @@ else
 {
 cart[idstr] = 1;
 }
-console.log(cart);
-localStorage.setItem('cart', JSON.stringify(cart));
-document.getElementById('cart').innerHTML = Object.keys(cart).length;
+updateCart(cart);
+
 });
+
+//add popover to cart
 $('#popcart').popover();
-document.getElementById("popcart").setAttribute('data-content', '<h5>Your Book Cart</h5>');
+updatePopover(cart);
+function updatePopover(cart)
+{
+    console.log('We are inside updatePopover');
+    var popStr = "";
+    popStr = popStr + "<h5> Cart Items</h5><div class='mx-2 my-2'>";
+    var i = 1;
+    for (var item in cart){
+        popStr = popStr + "<b>" + i + "</b>. ";
+        popStr = popStr + document.getElementById('name' + item).innerHTML.slice(0, 19) + "... Qty: " + cart[item] + '<br>';
+        i = i+1;
+    }
+    popStr = popStr + "</div>" 
+    console.log(popStr);
+    document.getElementById('popcart').setAttribute('data-content', popStr);
+    $('#popcart').popover('show');
+}
+
+function updateCart(cart) {
+  var sum = 0;
+    for (var item in cart) {
+      sum = sum + cart[item];
+        document.getElementById('div'+item).innerHTML = "<button id='minus" + item+ "' class='btn btn-primary minus'>-</button> <span id='val" + item + "''>" + cart[item] + "</span> <button id='plus" + item + "' class='btn btn-primary plus'> + </button>";
+    } 
+    localStorage.setItem('cart', JSON.stringify(cart));
+    document.getElementById('cart').innerHTML = sum;
+    console.log(cart);
+    updatePopover(cart);
+  }
+// If plus or minus button is clicked, change the cart as well as the display value
+$('.divbk').on("click", "button.minus", function() {
+    a = this.id.slice(7, );
+    cart['bk' + a] = cart['bk' + a] - 1;
+    cart['bk' + a] = Math.max(0, cart['bk' + a]);
+    document.getElementById('valbk' + a).innerHTML = cart['bk' + a];
+    updateCart(cart);
+});
+$('.divbk').on("click", "button.plus", function() {
+    a = this.id.slice(6, );
+    cart['bk' + a] = cart['bk' + a] + 1;
+    document.getElementById('valbk' + a).innerHTML = cart['bk' + a];
+    updateCart(cart);
+});
 </script>
 {% endblock %}
-
-
